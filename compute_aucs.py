@@ -27,14 +27,22 @@ if __name__ == '__main__':
     assert(len(labels) == len(predictions))
     assert(num_outputs == 919)
 
+    aucs = np.zeros(num_outputs, dtype=np.float)
     aucs_file = os.path.join(args.eval_dir, '%s-aucs-%s.txt' % (args.split, args.global_step))
     with open(aucs_file, 'w') as f:
         for i in xrange(num_outputs):
             try:
                 auc = roc_auc_score(labels[:, i], predictions[:, i])
+                aucs[i] = auc
                 f.write('%.9f\n' % auc)
             except ValueError:
                 f.write('NA (No positive in Test region)\n')
             _progress(i + 1, num_outputs, 'Computing AUCs')
         print
     print('Wrote AUCs to %s' % aucs_file)
+
+    print
+    print('Median AUCs')
+    print('- Transcription factors: %.3f' % np.median(aucs[125:125 + 690]))
+    print('- DNase I-hypersensitive sites: %.3f' % np.median(aucs[:125]))
+    print('- Histone marks: %.3f' % np.median(aucs[125 + 690:125 + 690 + 104]))
